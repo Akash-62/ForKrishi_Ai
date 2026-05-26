@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-base: #F8F5EC;
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #F1EEE4;
+  --color-text-primary: #17231B;
+  --color-text-secondary: #5D665F;
+  --color-text-muted: #7B827B;
+  --color-border-subtle: #DDD7C8;
+  --color-brand-primary: #1E6B4B;
+  --color-brand-deep: #123C2C;
+  --color-brand-light: #E8F5EE;
+  --color-accent-clay: #A66A3F;
+  --color-accent-gold: #C9932C;
+  
+  --color-status-low: #2F855A;
+  --color-status-medium: #B7791F;
+  --color-status-serious: #B42318;
+  
+  --radius-xl: 24px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+}
+
+:root {
+  --background: var(--color-bg-base);
+  --foreground: var(--color-text-primary);
+
+  --bg-base: var(--color-bg-base);
+  --surface: var(--color-surface);
+  --surface-soft: var(--color-surface-soft);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --border-subtle: var(--color-border-subtle);
+  
+  --brand-primary: var(--color-brand-primary);
+  --brand-deep: var(--color-brand-deep);
+  --brand-light: var(--color-brand-light);
+  --accent-clay: var(--color-accent-clay);
+  --accent-gold: var(--color-accent-gold);
+  
+  --status-low: var(--color-status-low);
+  --status-medium: var(--color-status-medium);
+  --status-serious: var(--color-status-serious);
+}
+
+html,
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: clip;
+}
+
+/* 3D Card Flip & Laser Scan Utilities */
+@keyframes scan {
+  0%, 100% { top: 0%; opacity: 0.3; }
+  50% { top: 100%; opacity: 0.8; }
+}
+
+.animate-scan {
+  animation: scan 3s ease-in-out infinite;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
