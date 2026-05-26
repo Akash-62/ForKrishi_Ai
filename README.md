@@ -1,7 +1,7 @@
 <div align="center">
 <img width="1200" height="475" alt="ForKrishi AI Banner" src="./public/logo_banner.png" />
 
-# 🌱 ForKrishi AI (ForKisan AI)
+# 🌱 ForKrishi AI (ForKisan)
 ### *Voice-First · India-First · AI-Powered Crop Help Assistant*
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
