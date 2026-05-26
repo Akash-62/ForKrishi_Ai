@@ -60,4 +60,4 @@
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) to view the app!
+   Open [https://for-krishi-ai.vercel.app/](https://for-krishi-ai.vercel.app/) to view the app!
