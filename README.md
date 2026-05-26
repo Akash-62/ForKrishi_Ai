@@ -1,19 +1,63 @@
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+
+# 🌱 ForKrishi AI (ForKisan AI)
+### *Voice-First · India-First · AI-Powered Crop Help Assistant*
+
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.0-blue?style=for-the-badge&logo=react)](https://react.dev/)
+[![Gemini](https://img.shields.io/badge/Gemini%20AI-3.5%20Flash-green?style=for-the-badge&logo=google-gemini)](https://ai.google.dev/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+
+---
 </div>
 
-# Run and deploy your AI Studio app
+**ForKrishi AI** is a lightweight, mobile-first web app designed for Indian farmers. It simplifies crop disease diagnosis through voice and visual AI inputs, completely localized into native languages (**English, Kannada, and Hindi**).
 
-This contains everything you need to run your app locally.
-https://ai.studio/apps/fbcb1f03-65ac-401d-a7ae-f5ea1c548634
+## ✨ Key Features
 
-## Run Locally
+*   **🎙️ Voice-First Diagnosis**: Farmers speak crop problems in local languages; Gemini AI transcribes, processes, and diagnoses instantly.
+*   **📸 Visual Photo Scanner**: Real-time leaf lesion detection with bounding-box analysis and confidence rating.
+*   **🌿 Organic vs. Chemical Advisories**: Split treatment plans featuring a strict *Pesticide Safety Precautions* warning card.
+*   **📲 WhatsApp Share Card Engine**: Generates and downloads custom-branded PNG cards on the fly using HTML5 Canvas.
+*   **💰 Voice-Query Mandi Prices**: Interactive market boards with voice-search and voice-readout price trends.
+*   **📶 Saved Offline Database**: Fully cached localStorage advisor profiles for connectivity-free field access.
+*   **🗺️ Expert Support**: Direct local Krishi Vigyan Kendra (KVK) finder to call or navigate to local extension officers.
 
-**Prerequisites:**  Node.js
+## 🛠️ Tech Stack
 
+*   **Frontend**: Next.js 15, React 19, TailwindCSS, Framer Motion (`motion/react`)
+*   **AI Integration**: Google GenAI SDK (`@google/genai`), Gemini 3.5 Flash Model
+*   **Web API**: HTML5 Canvas, Web Speech Synthesis & Speech Recognition API
+*   **Caching**: LocalStorage Offline Cache + Service Worker
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 🚀 Getting Started
+
+### Prerequisites
+*   Node.js (v18+)
+*   NPM
+
+### Installation & Run
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Akash-62/ForKrishi_Ai.git
+   cd ForKrishi_Ai
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment**:
+   Create a `.env` file in the root directory and add your Gemini API Key:
+   ```env
+   GEMINI_API_KEY="your_api_key_here"
+   ```
+
+4. **Launch development server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view the app!
