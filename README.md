@@ -31,11 +31,6 @@ Here are the latest results and interface screenshots showing the premium locali
 | Home Screen | Crop Detector & Cancel Button |
 | --- | --- |
 | ![ForKisan AI Home Screen](./public/results/forkisan_homescreen.png) | ![Crop Detector Scanner](./public/results/crop_detector_cancel_button.png) |
-
-| Localized Language Selection | Kannada Crop Advisory Card |
-| --- | --- |
-| ![Localized Language Selection](./public/results/language_modal_localized.png) | ![Kannada Crop Advisory Card](./public/results/mango_advisory_card_result.png) |
-
 ## 🛠️ Tech Stack
 
 *   **Frontend**: Next.js 15, React 19, TailwindCSS, Framer Motion (`motion/react`)
