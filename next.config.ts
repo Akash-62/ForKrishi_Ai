@@ -3,6 +3,10 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
+  experimental: {
+    // Avoid Next devtools Segment Explorer RSC manifest crashes in webpack dev.
+    devtoolSegmentExplorer: false,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

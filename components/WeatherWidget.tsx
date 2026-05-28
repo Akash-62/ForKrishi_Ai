@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CloudRain, Sun, Cloud, CloudFog, Loader2, MapPin, TrendingUp, TrendingDown, Mic, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UI_STRINGS, CROP_TRANSLATIONS, Language } from '@/lib/translations';
+import { UI_STRINGS, Language } from '@/lib/translations';
 
 interface WeatherData {
   temp: number;
@@ -317,10 +317,13 @@ export function WeatherWidget({ language = 'en' }: { language?: string }) {
 
             {/* Local Mandi Prices Board */}
             <div className="flex flex-col">
-              <div className="flex items-center justify-between mb-3.5">
+              <div className="flex items-center justify-between mb-2">
                 <h5 className="font-extrabold text-[10px] text-[#7C8B80] uppercase tracking-widest flex items-center gap-1.5">
                   <TrendingUp className="w-4 h-4 text-[var(--brand-primary)]" />
                   {t.mandiTitle || 'Mandi Market Prices (per Quintal)'}
+                  <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-100 text-[8px] font-black">
+                    SAMPLE
+                  </span>
                 </h5>
                 <button
                   onClick={startVoiceQuery}
@@ -334,6 +337,9 @@ export function WeatherWidget({ language = 'en' }: { language?: string }) {
                   <Mic className="w-4 h-4" />
                 </button>
               </div>
+              <p className="text-[10px] text-[#7C8B80] font-semibold mb-3.5">
+                Sample rates for demo only. Verify current prices with your local APMC or e-NAM source.
+              </p>
 
               {/* Voice Feedback Display */}
               <AnimatePresence>
@@ -357,7 +363,7 @@ export function WeatherWidget({ language = 'en' }: { language?: string }) {
                     <div key={crop.name} className="flex items-center justify-between bg-[#FAF9F5] border border-[#efede6] rounded-2xl p-3 hover:scale-[1.01] transition-transform duration-200 shadow-sm">
                       <div className="flex flex-col">
                         <span className="font-extrabold text-sm text-[var(--text-primary)]">{cropName}</span>
-                        <span className="text-[9px] text-[#7C8B80] font-bold uppercase tracking-wider">APMC Local Mandi</span>
+                        <span className="text-[9px] text-[#7C8B80] font-bold uppercase tracking-wider">Sample APMC rate</span>
                       </div>
                       
                       {/* Trend Sparkline */}

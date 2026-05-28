@@ -1,4 +1,4 @@
-import { Leaf, Home, Clock, Type, MapPin } from 'lucide-react';
+import { Leaf, Home, Clock, MapPin, Globe } from 'lucide-react';
 import { CurrentScreen } from '@/lib/types';
 
 interface HeaderProps {
@@ -7,9 +7,10 @@ interface HeaderProps {
   toggleTextSize?: () => void;
   isLargeText?: boolean;
   language: string;
+  onOpenLanguage?: () => void;
 }
 
-export function Header({ currentScreen, navigateTo, toggleTextSize, isLargeText, language }: HeaderProps) {
+export function Header({ currentScreen, navigateTo, toggleTextSize, isLargeText, language, onOpenLanguage }: HeaderProps) {
   return (
     <header className="w-full bg-[var(--surface)] border-b border-[var(--border-subtle)] sticky top-0 z-40 shadow-sm transition-all duration-300 pt-[env(safe-area-inset-top,0px)]">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -26,14 +27,14 @@ export function Header({ currentScreen, navigateTo, toggleTextSize, isLargeText,
         </button>
         
         <nav className="flex items-center gap-1 sm:gap-2">
-          {toggleTextSize && (
+          {onOpenLanguage && (
             <button 
-              onClick={toggleTextSize}
-              className={`p-2 rounded-full transition-colors flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] mr-1 ${isLargeText ? 'bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--brand-deep)] hover:bg-[var(--surface-soft)]'}`}
-              aria-label={isLargeText ? "Reset Text Size" : "Increase Text Size"}
-              title="Toggle Text Size"
+              onClick={onOpenLanguage}
+              className="p-2 text-[var(--text-secondary)] hover:text-[var(--brand-deep)] hover:bg-[var(--surface-soft)] rounded-full transition-colors flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] mr-1"
+              aria-label="Change Language"
+              title="Change Language"
             >
-              <Type className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Globe className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           )}
 

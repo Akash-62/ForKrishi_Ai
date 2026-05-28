@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Phone, Navigation, Loader2, Search, AlertCircle, ChevronLeft } from 'lucide-react';
+import { MapPin, Navigation, Loader2, Search, AlertCircle, ChevronLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface KVK {
   name: string;
   address: string;
-  phone: string;
+  phone?: string | null;
   distance?: string;
   lat?: number;
   lng?: number;
@@ -83,6 +83,10 @@ export function KVKFinder({ onBack }: { onBack: () => void }) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(kvk.name + ' ' + kvk.address)}`;
   };
 
+  const getContactSearchUrl = (kvk: KVK) => {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${kvk.name} ${kvk.address} phone`)}`;
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 15 }}
@@ -137,7 +141,12 @@ export function KVKFinder({ onBack }: { onBack: () => void }) {
 
       {kvks.length > 0 && (
         <div className="space-y-4 pb-12">
-          <h3 className="font-semibold text-lg text-[var(--text-primary)] mb-4">Centers found near {locationName || 'you'}:</h3>
+          <div className="mb-4">
+            <h3 className="font-semibold text-lg text-[var(--text-primary)]">Centers found near {locationName || 'you'}:</h3>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              AI can estimate nearby centers, but contact details should be verified through maps or an official directory before visiting.
+            </p>
+          </div>
           {kvks.map((kvk, idx) => (
             <motion.div 
               key={idx}
@@ -164,12 +173,14 @@ export function KVKFinder({ onBack }: { onBack: () => void }) {
                 
                 <div className="flex flex-row md:flex-col gap-2 min-w-[140px] border-t md:border-t-0 md:border-l border-[var(--border-subtle)] pt-4 md:pt-0 md:pl-5">
                   <a 
-                    href={`tel:${kvk.phone.replace(/[^0-9+]/g, '')}`}
+                    href={getContactSearchUrl(kvk)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex-1 bg-[var(--surface-soft)] hover:bg-[var(--surface)] border border-[var(--border-subtle)] text-[var(--text-primary)] py-2.5 px-3 rounded-md flex items-center justify-center gap-2 transition-colors focus:ring-2 focus:ring-[var(--brand-primary)] outline-none"
-                    aria-label={`Call ${kvk.name}`}
+                    aria-label={`Search contact details for ${kvk.name}`}
                   >
-                    <Phone className="w-4 h-4 text-[var(--brand-primary)]" />
-                    <span className="text-xs sm:text-sm font-semibold">Call Center</span>
+                    <Search className="w-4 h-4 text-[var(--brand-primary)]" />
+                    <span className="text-xs sm:text-sm font-semibold">Search Contact</span>
                   </a>
                   
                   <a 

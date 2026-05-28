@@ -1,25 +1,44 @@
-import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  createGeminiClient,
+  GEMINI_MODEL,
+  GeminiPart,
+  isRateLimited,
+  limitedString,
+  normalizeCropDetectionPayload,
+  parseDataUrlImage,
+  parseJsonObject,
+} from "@/lib/gemini-utils";
 
 export async function POST(req: NextRequest) {
   try {
-    const { crop, language, image } = await req.json();
+    if (isRateLimited(req, "gemini-analyze-image", 18)) {
+      return NextResponse.json({ error: "Too many requests. Please wait and try again." }, { status: 429 });
+    }
 
-    if (!image) {
+    const body = await req.json();
+    const crop = limitedString(body?.crop, 80);
+    const language = limitedString(body?.language, 8, "en");
+    const parsedImage = parseDataUrlImage(body?.image);
+
+    if (!parsedImage) {
       return NextResponse.json({ error: "Image is required" }, { status: 400 });
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const ai = createGeminiClient();
+    if (!ai) {
+      return NextResponse.json({ error: "Gemini API key is not configured" }, { status: 500 });
+    }
     
     const isCropDetection = !crop;
     let prompt = "";
     
     if (isCropDetection) {
       prompt = `You are a crop classifier. The farmer uploaded a photo of their crop leaf.
-Identify which crop this leaf belongs to. Choose the crop species ONLY from this list: "Tomato", "Paddy", "Ragi", "Chilli", "Maize". If it is none of these, choose "Other".
+Identify which crop this leaf belongs to. If the crop is one of "Tomato", "Paddy", "Ragi", "Chilli", or "Maize", return that exact name. Otherwise, identify the specific crop species (e.g., "Lemon", "Mango", "Cotton", "Groundnut", etc.) and return its name. If you cannot identify the leaf at all, return "Other".
 Return a JSON object in this exact format:
 {
-  "detectedCrop": "Tomato" | "Paddy" | "Ragi" | "Chilli" | "Maize" | "Other",
+  "detectedCrop": string,
   "confidence": number,
   "explanation": "1-sentence visual description of the crop leaf in ${language}"
 }
@@ -30,40 +49,43 @@ Language: ${language}.
 Analyze the image and provide a very short, preliminary visual diagnosis (1-2 sentences) of what the problem appears to be visually. Keep it simple, respectful, and helpful.`;
     }
 
-    let contents: any[] = [{ text: prompt }];
-
-    const match = image.match(/^data:(image\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
-    if (match) {
-      contents.push({
+    const contents: GeminiPart[] = [
+      { text: prompt },
+      {
         inlineData: {
-          mimeType: match[1],
-          data: match[2]
+          mimeType: parsedImage.mimeType,
+          data: parsedImage.data
         }
-      });
-    } else {
-      return NextResponse.json({ error: "Invalid image data" }, { status: 400 });
-    }
+      }
+    ];
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: GEMINI_MODEL,
       contents: contents,
+      config: isCropDetection ? { responseMimeType: "application/json" } : undefined,
     });
 
     const responseText = response.text || "";
 
     if (isCropDetection) {
       try {
+        console.log("Gemini Raw Response:", responseText);
         const cleanJson = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
         const parsed = JSON.parse(cleanJson);
-        return NextResponse.json(parsed);
+        const data = normalizeCropDetectionPayload(parsed);
+        if (!data) {
+          console.error("Failed to parse crop detection response", responseText);
+          return NextResponse.json({ detectedCrop: "Other", confidence: 0.5, explanation: "Could not classify crop visual." });
+        }
+        return NextResponse.json(data);
       } catch (jsonErr) {
         console.error("Failed to parse crop detection response", responseText, jsonErr);
         return NextResponse.json({ detectedCrop: "Other", confidence: 0.5, explanation: "Could not classify crop visual." });
       }
     }
 
-    return NextResponse.json({ diagnosis: responseText });
-  } catch (error: any) {
+    return NextResponse.json({ diagnosis: limitedString(responseText, 700, "Could not analyze the image clearly.") });
+  } catch (error) {
     console.error("Gemini Image Analysis Error:", error);
     return NextResponse.json({ error: "Failed to analyze image." }, { status: 500 });
   }

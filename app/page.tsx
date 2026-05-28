@@ -6,19 +6,22 @@ import { WifiOff } from 'lucide-react';
 import { CurrentScreen, AdvisoryResult } from '@/lib/types';
 import { Header } from '@/components/Header';
 import { HomeScreen } from '@/components/HomeScreen';
-import { LanguageSelector } from '@/components/LanguageSelector';
 import { CropSelector } from '@/components/CropSelector';
 import { ProblemInput } from '@/components/ProblemInput';
 import { AdviceResult } from '@/components/AdviceResult';
 import { FarmerUpdates } from '@/components/FarmerUpdates';
 import { SavedAdvice } from '@/components/SavedAdvice';
 import { KVKFinder } from '@/components/KVKFinder';
+import { LanguageModal } from '@/components/LanguageModal';
+
+type HomeUploadSource = 'camera' | 'gallery';
 
 export default function AppShell() {
   const [currentScreen, setCurrentScreen] = useState<CurrentScreen>('home');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [selectedCrop, setSelectedCrop] = useState<string>('');
   const [problemText, setProblemText] = useState<string>('');
+  const [pendingUploadSource, setPendingUploadSource] = useState<HomeUploadSource | null>(null);
   
   const [advisoryResult, setAdvisoryResult] = useState<AdvisoryResult | null>(null);
   const [savedAdvisories, setSavedAdvisories] = useState<AdvisoryResult[]>([]);
@@ -27,6 +30,8 @@ export default function AppShell() {
   const [isOnline, setIsOnline] = useState<boolean>(true);
   
   const [isLargeText, setIsLargeText] = useState<boolean>(false);
+  const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
+  const [advisoryImage, setAdvisoryImage] = useState<string | null>(null);
 
   useEffect(() => {
     // Initial online state
@@ -50,8 +55,16 @@ export default function AppShell() {
   useEffect(() => {
     const saved = localStorage.getItem('forkisan_saved');
     const savedTextSize = localStorage.getItem('forkisan_text_size');
+    const savedLang = localStorage.getItem('forkisan_language');
+    const hasLangSet = localStorage.getItem('forkisan_language_set');
     
     const timer = setTimeout(() => {
+      if (savedLang) {
+        setSelectedLanguage(savedLang);
+      }
+      if (!hasLangSet) {
+        setShowLanguageModal(true);
+      }
       if (saved) {
         try {
           setSavedAdvisories(JSON.parse(saved));
@@ -98,11 +111,33 @@ export default function AppShell() {
   };
 
   const navigateTo = (screen: CurrentScreen) => {
+    if (screen === 'home') {
+      setPendingUploadSource(null);
+      setSelectedCrop('');
+      setProblemText('');
+      setAdvisoryImage(null);
+    }
+
     window.scrollTo({ top: 0, behavior: 'auto' });
     setCurrentScreen(screen);
   };
 
-  const startFlow = () => navigateTo('language');
+  const handleLanguageSelect = (lang: string) => {
+    setSelectedLanguage(lang);
+    localStorage.setItem('forkisan_language', lang);
+    localStorage.setItem('forkisan_language_set', 'true');
+    setShowLanguageModal(false);
+  };
+
+  const startFlow = () => {
+    setPendingUploadSource(null);
+    navigateTo('crop');
+  };
+
+  const startUploadFlow = (source: HomeUploadSource) => {
+    setPendingUploadSource(source);
+    navigateTo('crop');
+  };
 
   return (
     <div className="flex-1 flex flex-col items-center w-full min-h-screen overflow-x-clip transition-all duration-300">
@@ -112,23 +147,19 @@ export default function AppShell() {
         toggleTextSize={toggleTextSize}
         isLargeText={isLargeText}
         language={selectedLanguage}
+        onOpenLanguage={() => setShowLanguageModal(true)}
       />
       
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 md:py-10 flex flex-col relative transition-all duration-300">
         <AnimatePresence mode="wait">
           {currentScreen === 'home' && (
-            <HomeScreen key="home" onStart={startFlow} onUpdates={() => navigateTo('updates')} onNavigate={navigateTo} language={selectedLanguage} />
-          )}
-          
-          {currentScreen === 'language' && (
-            <LanguageSelector 
-              key="language"
-              selected={selectedLanguage} 
-              onSelect={(lang) => {
-                setSelectedLanguage(lang);
-                navigateTo('crop');
-              }} 
-              onBack={() => navigateTo('home')}
+            <HomeScreen
+              key="home"
+              onStart={startFlow}
+              onStartUpload={startUploadFlow}
+              onUpdates={() => navigateTo('updates')}
+              onNavigate={navigateTo}
+              language={selectedLanguage}
             />
           )}
           
@@ -137,11 +168,14 @@ export default function AppShell() {
               key="crop"
               language={selectedLanguage}
               selected={selectedCrop} 
-              onSelect={(crop) => {
+              onSelect={(crop, img) => {
                 setSelectedCrop(crop);
+                if (img) {
+                  setAdvisoryImage(img);
+                }
                 navigateTo('problem');
               }}
-              onBack={() => navigateTo('language')}
+              onBack={() => navigateTo('home')}
             />
           )}
           
@@ -151,8 +185,12 @@ export default function AppShell() {
               language={selectedLanguage}
               crop={selectedCrop}
               initialText={problemText}
+              initialImage={advisoryImage}
               onChange={(text) => setProblemText(text)}
+              onImageChange={(img) => setAdvisoryImage(img)}
               onBack={() => navigateTo('crop')}
+              initialUploadSource={pendingUploadSource}
+              onInitialUploadHandled={() => setPendingUploadSource(null)}
               onResult={(res) => {
                 setAdvisoryResult(res);
                 navigateTo('result');
@@ -217,6 +255,13 @@ export default function AppShell() {
           {toastMessage}
         </div>
       )}
+
+      {/* Language Selection Modal */}
+      <LanguageModal 
+        isOpen={showLanguageModal} 
+        selectedLanguage={selectedLanguage} 
+        onSelect={handleLanguageSelect} 
+      />
     </div>
   );
 }

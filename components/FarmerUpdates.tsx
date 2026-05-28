@@ -250,7 +250,7 @@ export function FarmerUpdates({ onBack, language = 'en' }: { onBack: () => void;
           </h2>
           <p className="text-[var(--text-secondary)] text-sm font-medium mt-1 flex items-center gap-1.5">
             <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
-            {lang === 'kn' ? 'ಪ್ರತಿದಿನ ನವೀಕರಿಸಲಾಗುತ್ತದೆ' : lang === 'hi' ? 'दैनिक रूप से अपडेट किया जाता है' : 'Updated daily at 6:00 AM'}
+            {lang === 'kn' ? 'ಮಾದರಿ ಮಾಹಿತಿ ಫೀಡ್' : lang === 'hi' ? 'नमूना सूचना फीड' : 'Sample information feed'}
           </p>
         </div>
       </div>
@@ -304,6 +304,9 @@ export function FarmerUpdates({ onBack, language = 'en' }: { onBack: () => void;
                       : 'bg-amber-50 text-amber-700 border-amber-100'
                 }`}>
                   {CATEGORY_LABELS[update.category]}
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border bg-gray-50 text-gray-500 border-gray-100">
+                  Sample
                 </span>
                 
                 {/* Dynamic dates relative to today */}

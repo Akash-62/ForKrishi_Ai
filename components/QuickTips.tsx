@@ -1,6 +1,6 @@
 import { Info } from 'lucide-react';
 import { motion } from 'motion/react';
-import { CROP_TRANSLATIONS, Language } from '@/lib/translations';
+import { CROP_TRANSLATIONS, Language, getLocalizedCropName } from '@/lib/translations';
 
 const CROP_TIPS: Record<string, Record<string, string[]>> = {
   'Tomato': {
@@ -112,7 +112,7 @@ export function QuickTips({ crop, language }: { crop: string; language: string }
   const lang = (language as Language) || 'en';
   const cropTips = CROP_TIPS[crop]?.[lang] || DEFAULT_TIPS[lang] || DEFAULT_TIPS.en;
   
-  const cropNameTrans = CROP_TRANSLATIONS[lang]?.[crop] || crop;
+  const cropNameTrans = getLocalizedCropName(crop, lang);
 
   const headingText = lang === 'kn' 
     ? `${cropNameTrans ? `${cropNameTrans} ಗಾಗಿ` : 'ನಿಮ್ಮ ಬೆಳೆಗಾಗಿ'} ತ್ವರಿತ ಸಲಹೆಗಳು`

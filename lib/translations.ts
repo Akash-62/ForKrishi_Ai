@@ -13,7 +13,24 @@ export const CROP_TRANSLATIONS: Record<Language, Record<string, string>> = {
     Ragi: 'Ragi',
     Chilli: 'Chilli',
     Maize: 'Maize',
-    Other: 'Other'
+    Other: 'Other',
+    Mango: 'Mango',
+    Lemon: 'Lemon',
+    LemonLeaf: 'Lemon',
+    'Lemon Leaf': 'Lemon',
+    Citrus: 'Lemon',
+    Cotton: 'Cotton',
+    Groundnut: 'Groundnut',
+    Banana: 'Banana',
+    Onion: 'Onion',
+    Potato: 'Potato',
+    Garlic: 'Garlic',
+    Ginger: 'Ginger',
+    Brinjal: 'Brinjal',
+    Eggplant: 'Brinjal',
+    Wheat: 'Wheat',
+    Coconut: 'Coconut',
+    Arecanut: 'Arecanut'
   },
   kn: {
     Tomato: 'ಟೊಮೆಟೊ',
@@ -21,7 +38,24 @@ export const CROP_TRANSLATIONS: Record<Language, Record<string, string>> = {
     Ragi: 'ರಾಗಿ',
     Chilli: 'ಮೆಣಸಿನಕಾಯಿ',
     Maize: 'ಮೆಕ್ಕೆಜೋಳ',
-    Other: 'ಇತರೆ'
+    Other: 'ಇತರೆ',
+    Mango: 'ಮಾವು',
+    Lemon: 'ನಿಂಬೆ',
+    LemonLeaf: 'ನಿಂಬೆ',
+    'Lemon Leaf': 'ನಿಂಬೆ',
+    Citrus: 'ನಿಂಬೆ',
+    Cotton: 'ಹತ್ತಿ',
+    Groundnut: 'ನೆಲಗಡಲೆ',
+    Banana: 'ಬಾಳೆಹಣ್ಣು',
+    Onion: 'ಈರುಳ್ಳಿ',
+    Potato: 'ಆಲೂಗಡ್ಡೆ',
+    Garlic: 'ಬೆಳ್ಳುಳ್ಳಿ',
+    Ginger: 'ಶುಂಠಿ',
+    Brinjal: 'ಬದನೆಕಾಯಿ',
+    Eggplant: 'ಬದನೆಕಾಯಿ',
+    Wheat: 'ಗೋಧಿ',
+    Coconut: 'ತೆಂಗಿನಕಾಯಿ',
+    Arecanut: 'ಅಡಿಕೆ'
   },
   hi: {
     Tomato: 'टमाटर',
@@ -29,7 +63,24 @@ export const CROP_TRANSLATIONS: Record<Language, Record<string, string>> = {
     Ragi: 'रागी',
     Chilli: 'मिर्च',
     Maize: 'मक्का',
-    Other: 'अन्य'
+    Other: 'अन्य',
+    Mango: 'आम',
+    Lemon: 'नींबू',
+    LemonLeaf: 'नींबू',
+    'Lemon Leaf': 'नींबू',
+    Citrus: 'नींबू',
+    Cotton: 'कपास',
+    Groundnut: 'मूंगफली',
+    Banana: 'केला',
+    Onion: 'प्याज',
+    Potato: 'आलू',
+    Garlic: 'लहसुन',
+    Ginger: 'अदरक',
+    Brinjal: 'बैंगन',
+    Eggplant: 'बैंगन',
+    Wheat: 'गेहूं',
+    Coconut: 'नारियल',
+    Arecanut: 'सुपारी'
   }
 };
 
@@ -99,12 +150,14 @@ export const UI_STRINGS: Record<Language, Record<string, string>> = {
     soilCardScanDesc: 'Upload Soil Health Card photo to get N-P-K & pH values with fertilizer advice.',
     scanSoilBtn: 'Scan Soil Card',
     analyzingSoilCard: 'Analyzing Soil Health Card...',
+    preliminaryVisualReview: 'Preliminary Visual Review',
+    visualReviewDesc: 'The photo was reviewed by AI as supporting context. It is not a measured infection percentage or confirmed diagnosis.',
   },
   kn: {
     chooseLanguage: 'ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆ ಮಾಡಿ',
     changeAnytime: 'ನೀವು ಯಾವಾಗ ಬೇಕಾದರೂ ಬದಲಾಯಿಸಬಹುದು.',
     selectCrop: 'ನಿಮ್ಮ ಬೆಳೆ ಆಯ್ಕೆ ಮಾಡಿ',
-    cropProblem: 'ಬೆಳೆ समस्या ತಿಳಿಸಿ',
+    cropProblem: 'ಬೆಳೆ ಸಮಸ್ಯೆ ತಿಳಿಸಿ',
     tapToSpeak: 'ಮಾತನಾಡಲು ಒತ್ತಿ',
     listening: 'ಕೇಳುತ್ತಿದ್ದೇನೆ... ನಿಲ್ಲಿಸಲು ಮತ್ತೆ ಒತ್ತಿ',
     typeManually: 'ಅಥವಾ ಕೆಳಗೆ ಟೈಪ್ ಮಾಡಿ',
@@ -165,6 +218,8 @@ export const UI_STRINGS: Record<Language, Record<string, string>> = {
     soilCardScanDesc: 'ರಸಗೊಬ್ಬರ ಸಲಹೆಯೊಂದಿಗೆ N-P-K ಮತ್ತು pH ಮೌಲ್ಯಗಳನ್ನು ಪಡೆಯಲು ಮಣ್ಣಿನ ಆರೋಗ್ಯ ಕಾರ್ಡ್ ಫೋಟೋ ಅಪ್ಲೋಡ್ ಮಾಡಿ.',
     scanSoilBtn: 'ಮಣ್ಣಿನ ಕಾರ್ಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ',
     analyzingSoilCard: 'ಮಣ್ಣಿನ ಆರೋಗ್ಯ ಕಾರ್ಡ್ ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...',
+    preliminaryVisualReview: 'ಪ್ರಾಥಮಿಕ ದೃಶ್ಯ ಪರಿಶೀಲನೆ',
+    visualReviewDesc: 'ಫೋಟೋವನ್ನು AI ಪೂರಕ ಸಂದರ್ಭವಾಗಿ ಪರಿಶೀಲಿಸಿದೆ. ಇದು ಅಳತೆ ಮಾಡಿದ ಸೋಂಕಿನ ಶೇಕಡಾವಾರು ಅಥವಾ ದೃಢಪಡಿಸಿದ ರೋಗನಿರ್ಣಯವಲ್ಲ.',
   },
   hi: {
     chooseLanguage: 'अपनी भाषा चुनें',
@@ -231,5 +286,35 @@ export const UI_STRINGS: Record<Language, Record<string, string>> = {
     soilCardScanDesc: 'उर्वरक सलाह के साथ N-P-K और pH मान प्राप्त करने के लिए मृदा स्वास्थ्य कार्ड फोटो अपलोड करें।',
     scanSoilBtn: 'मृदा कार्ड स्कैन करें',
     analyzingSoilCard: 'मृदा स्वास्थ्य कार्ड का विश्लेषण किया जा रहा है...',
+    preliminaryVisualReview: 'प्रारंभिक दृश्य समीक्षा',
+    visualReviewDesc: 'फोटो की समीक्षा AI द्वारा सहायक संदर्भ के रूप में की गई थी। यह मापा गया संक्रमण प्रतिशत या पुष्टि किया गया निदान नहीं है।',
   }
+};
+
+export const getLocalizedCropName = (cropName: string, lang: string): string => {
+  if (!cropName) return '';
+  const name = cropName.toLowerCase();
+  let normalizedKey = cropName;
+  if (name.includes('tomato')) normalizedKey = 'Tomato';
+  else if (name.includes('paddy') || name.includes('rice') || name.includes('धान') || name.includes('ಭತ್ತ')) normalizedKey = 'Paddy';
+  else if (name.includes('ragi') || name.includes('ರಾಕಿ') || name.includes('ರಾ ಗಿ') || name.includes('ರಾ ಜಿ') || name.includes('ರಾಗಿ') || name.includes('रागी')) normalizedKey = 'Ragi';
+  else if (name.includes('chilli') || name.includes('pepper') || name.includes('ಮೆಣಸಿನಕಾಯಿ') || name.includes('मिर्च')) normalizedKey = 'Chilli';
+  else if (name.includes('maize') || name.includes('corn') || name.includes('ಮೆಕ್ಕೆಜೋಳ') || name.includes('मक्का')) normalizedKey = 'Maize';
+  else if (name.includes('lemon') || name.includes('citrus') || name.includes('lime') || name.includes('ನಿಂಬೆ') || name.includes('नींबू')) normalizedKey = 'Lemon';
+  else if (name.includes('mango') || name.includes('ಮಾವಿನ') || name.includes('ಮಾವು') || name.includes('आम')) normalizedKey = 'Mango';
+  else if (name.includes('cotton') || name.includes('ಹತ್ತಿ') || name.includes('कपास')) normalizedKey = 'Cotton';
+  else if (name.includes('groundnut') || name.includes('peanut') || name.includes('ನೆಲಗಡಲೆ') || name.includes('ಶೇಂಗಾ') || name.includes('मूंगफली')) normalizedKey = 'Groundnut';
+  else if (name.includes('banana') || name.includes('ಬಾಳೆ') || name.includes('केला')) normalizedKey = 'Banana';
+  else if (name.includes('onion') || name.includes('ಈರುಳ್ಳಿ') || name.includes('प्याज')) normalizedKey = 'Onion';
+  else if (name.includes('potato') || name.includes('ಆಲೂಗಡ್ಡೆ') || name.includes('आलू')) normalizedKey = 'Potato';
+  else if (name.includes('garlic') || name.includes('ಬೆಳ್ಳುಳ್ಳಿ') || name.includes('लहसुन')) normalizedKey = 'Garlic';
+  else if (name.includes('ginger') || name.includes('ಶುಂಠಿ') || name.includes('अदरक')) normalizedKey = 'Ginger';
+  else if (name.includes('brinjal') || name.includes('eggplant') || name.includes('ಬದನೆಕಾಯಿ') || name.includes('बैंगन')) normalizedKey = 'Brinjal';
+  else if (name.includes('wheat') || name.includes('ಗೋಧಿ') || name.includes('गेहूं')) normalizedKey = 'Wheat';
+  else if (name.includes('coconut') || name.includes('ತೆಂಗಿನಕಾಯಿ') || name.includes('नारियल')) normalizedKey = 'Coconut';
+  else if (name.includes('arecanut') || name.includes('ಅಡಿಕೆ') || name.includes('ಸುಪಾರಿ') || name.includes('सुपारी')) normalizedKey = 'Arecanut';
+  else if (name.includes('other') || name.includes('ಇತರೆ') || name.includes('अन्य')) normalizedKey = 'Other';
+  
+  const translations = CROP_TRANSLATIONS[lang as Language] || CROP_TRANSLATIONS.en;
+  return translations[normalizedKey] || cropName;
 };

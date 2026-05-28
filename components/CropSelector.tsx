@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, Check, Sprout, ShieldAlert, Sparkles, X, Mic, Info, Camera, Loader2, ChevronRight, AlertCircle } from 'lucide-react';
-import { UI_STRINGS, CROP_TRANSLATIONS, Language } from '@/lib/translations';
+import { ChevronLeft, Check, Sprout, ShieldAlert, Sparkles, X, Mic, Info, Camera, ImageIcon, Loader2, ChevronRight, AlertCircle } from 'lucide-react';
+import { UI_STRINGS, CROP_TRANSLATIONS, Language, getLocalizedCropName } from '@/lib/translations';
 
 const COMMON_CROPS = ['Tomato', 'Paddy', 'Ragi', 'Chilli', 'Maize'];
 
@@ -344,7 +344,7 @@ export function CropSelector({
 }: { 
   language: string; 
   selected: string; 
-  onSelect: (crop: string) => void; 
+  onSelect: (crop: string, image?: string) => void; 
   onBack: () => void; 
 }) {
   const [isOther, setIsOther] = useState(selected && !COMMON_CROPS.includes(selected));
@@ -360,7 +360,9 @@ export function CropSelector({
     }
   }
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const scanTimeoutRef = useRef<any>(null);
   const [isScanningCrop, setIsScanningCrop] = useState(false);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [scanStatus, setScanStatus] = useState<string>('');
@@ -456,16 +458,16 @@ export function CropSelector({
       setScanResult(data);
       setScanStatus(lang === 'kn' ? 'ಬೆಳೆ ಪತ್ತೆಯಾಗಿದೆ!' : lang === 'hi' ? 'फसल मिल गई!' : 'Crop Identified!');
       
-      setTimeout(() => {
+      scanTimeoutRef.current = setTimeout(() => {
         setIsScanningCrop(false);
         setScanPreview(null);
         if (data.detectedCrop && COMMON_CROPS.includes(data.detectedCrop)) {
           setManagerCrop(data.detectedCrop);
-          onSelect(data.detectedCrop);
+          onSelect(data.detectedCrop, base64Img);
         } else if (data.detectedCrop === 'Other') {
           setIsOther(true);
         } else {
-          onSelect(data.detectedCrop);
+          onSelect(data.detectedCrop, base64Img);
         }
       }, 2500);
       
@@ -530,12 +532,9 @@ export function CropSelector({
 
       {/* Auto-crop Scan Header Card */}
       <div className="w-full mb-8">
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full p-5 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--brand-primary)] bg-[var(--brand-light)] hover:bg-[var(--brand-primary)]/10 text-[var(--brand-deep)] transition-all cursor-pointer flex items-center justify-between group shadow-sm"
-        >
+        <div className="w-full p-5 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--brand-primary)] bg-[var(--brand-light)] text-[var(--brand-deep)] shadow-sm">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[var(--brand-primary)] shadow-sm group-hover:scale-105 transition-transform duration-200">
+            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[var(--brand-primary)] shadow-sm">
               <Camera className="w-6 h-6" />
             </div>
             <div className="text-left">
@@ -548,14 +547,37 @@ export function CropSelector({
               </p>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-[var(--brand-primary)] group-hover:translate-x-1 transition-transform" />
-        </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              className="flex items-center justify-center gap-2 rounded-xl bg-white/80 border border-[var(--brand-primary)]/20 px-4 py-3 text-sm font-extrabold text-[var(--brand-deep)] hover:bg-white transition-colors active:scale-[0.98]"
+            >
+              <Camera className="w-4 h-4 text-[var(--brand-primary)]" />
+              {lang === 'kn' ? 'ಕ್ಯಾಮೆರಾ' : lang === 'hi' ? 'कैमरा' : 'Camera'}
+            </button>
+            <button
+              onClick={() => galleryInputRef.current?.click()}
+              className="flex items-center justify-center gap-2 rounded-xl bg-white/80 border border-[var(--brand-primary)]/20 px-4 py-3 text-sm font-extrabold text-[var(--brand-deep)] hover:bg-white transition-colors active:scale-[0.98]"
+            >
+              <ImageIcon className="w-4 h-4 text-[var(--brand-primary)]" />
+              {lang === 'kn' ? 'ಗ್ಯಾಲರಿ' : lang === 'hi' ? 'गैलरी' : 'Gallery'}
+              <ChevronRight className="w-4 h-4 text-[var(--brand-primary)]" />
+            </button>
+          </div>
+        </div>
         <input 
           type="file" 
           accept="image/*" 
           capture="environment" 
           className="hidden" 
-          ref={fileInputRef} 
+          ref={cameraInputRef}
+          onChange={handleCropFileChange} 
+        />
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={galleryInputRef}
           onChange={handleCropFileChange} 
         />
       </div>
@@ -671,7 +693,7 @@ export function CropSelector({
                   </span>
                   <div>
                     <h3 className="font-bold text-2xl text-[var(--text-primary)]">
-                      {CROP_TRANSLATIONS[lang]?.[managerCrop] || managerCrop} {m.managerTitle}
+                       {getLocalizedCropName(managerCrop, lang)} {m.managerTitle}
                     </h3>
                     <p className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">ForKisan Smart Dashboard</p>
                   </div>
@@ -853,7 +875,7 @@ export function CropSelector({
                       <Check className="w-8 h-8 stroke-[3]" />
                     </div>
                     <div className="font-extrabold text-2xl text-emerald-400">
-                      {CROP_TRANSLATIONS[lang]?.[scanResult.detectedCrop] || scanResult.detectedCrop}
+                      {getLocalizedCropName(scanResult.detectedCrop, lang)}
                     </div>
                     {scanResult.confidence && (
                       <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
@@ -894,6 +916,23 @@ export function CropSelector({
                   <span>{scanStatus}</span>
                 </div>
               )}
+
+              {/* Cancel / Wrong Crop Button */}
+              <button
+                onClick={() => {
+                  if (scanTimeoutRef.current) {
+                    clearTimeout(scanTimeoutRef.current);
+                    scanTimeoutRef.current = null;
+                  }
+                  setIsScanningCrop(false);
+                  setScanPreview(null);
+                  setScanResult(null);
+                }}
+                className="mt-4 px-6 py-2.5 bg-red-950/40 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-full font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer z-40"
+              >
+                <X className="w-4 h-4" />
+                {lang === 'kn' ? 'ತಪ್ಪು ಬೆಳೆ / ರದ್ದುಮಾಡಿ' : lang === 'hi' ? 'गलत फसल / रद्द करें' : 'Wrong Crop / Cancel'}
+              </button>
             </div>
           </motion.div>
         )}

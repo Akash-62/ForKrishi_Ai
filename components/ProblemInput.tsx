@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, Mic, Square, Loader2, AlertCircle, Camera, X, Sparkles, HelpCircle, Check, Info } from 'lucide-react';
+import { ChevronLeft, Mic, Square, Loader2, AlertCircle, Camera, ImageIcon, X, Sparkles, HelpCircle, Check, Info, ShieldAlert } from 'lucide-react';
 import { AdvisoryResult } from '@/lib/types';
 import { QuickTips } from './QuickTips';
 import { WaveformVisualizer } from './WaveformVisualizer';
-import { UI_STRINGS, CROP_TRANSLATIONS, Language } from '@/lib/translations';
+import { UI_STRINGS, CROP_TRANSLATIONS, Language, getLocalizedCropName } from '@/lib/translations';
 
 const GUIDED_QUESTIONS = {
   en: [
@@ -32,19 +32,53 @@ const CROP_EMOJIS: Record<string, string> = {
   Maize: '🌽'
 };
 
+const getCropEmoji = (cropName: string) => {
+  if (!cropName) return '🌱';
+  const name = cropName.toLowerCase();
+  if (name.includes('tomato')) return '🍅';
+  if (name.includes('paddy') || name.includes('rice') || name.includes('धान') || name.includes('ಭತ್ತ')) return '🌾';
+  if (name.includes('ragi') || name.includes('ರಾಗಿ') || name.includes('ರಾಕಿ') || name.includes('ರಾ ಗಿ') || name.includes('ರಾ ಜಿ') || name.includes('रागी')) return '🌿';
+  if (name.includes('chilli') || name.includes('pepper') || name.includes('ಮೆಣಸಿನಕಾಯಿ') || name.includes('मिर्च')) return '🌶';
+  if (name.includes('maize') || name.includes('corn') || name.includes('ಮೆಕ್ಕೆಜೋಳ') || name.includes('मक्का')) return '🌽';
+  if (name.includes('lemon') || name.includes('citrus') || name.includes('lime') || name.includes('ನಿಂಬೆ') || name.includes('नींबू')) return '🍋';
+  if (name.includes('mango') || name.includes('ಮಾವು') || name.includes('आम')) return '🥭';
+  if (name.includes('cotton') || name.includes('ಹತ್ತಿ') || name.includes('कपास')) return '☁️';
+  if (name.includes('groundnut') || name.includes('peanut') || name.includes('ನೆಲಗಡಲೆ') || name.includes('ಶೇಂಗಾ') || name.includes('मूंगफली')) return '🥜';
+  if (name.includes('banana') || name.includes('ಬಾಳೆ') || name.includes('केला')) return '🍌';
+  if (name.includes('onion') || name.includes('ಈರುಳ್ಳಿ') || name.includes(' प्याज')) return '🧅';
+  if (name.includes('potato') || name.includes('ಆಲೂಗಡ್ಡೆ') || name.includes('आलू')) return '🥔';
+  if (name.includes('garlic') || name.includes('ಬೆಳ್ಳುಳ್ಳಿ') || name.includes('लहसुन')) return '🧄';
+  if (name.includes('ginger') || name.includes('ಶುಂಠಿ') || name.includes('अदरक')) return '🫚';
+  if (name.includes('brinjal') || name.includes('eggplant') || name.includes('ಬದನೆಕಾಯಿ') || name.includes('बैंगन')) return '🍆';
+  if (name.includes('wheat') || name.includes('ಗೋಧಿ') || name.includes('गेहूं')) return '🌾';
+  if (name.includes('coconut') || name.includes('ತೆಂಗಿನಕಾಯಿ') || name.includes('नारियल')) return '🥥';
+  if (name.includes('arecanut') || name.includes('ಅಡಿಕೆ') || name.includes('सुपारी')) return '🌴';
+  return CROP_EMOJIS[cropName] || '🌱';
+};
+
+type InitialUploadSource = 'camera' | 'gallery';
+
 export function ProblemInput({ 
   language, 
   crop, 
   initialText,
+  initialImage,
+  onImageChange,
   onChange,
   onBack, 
+  initialUploadSource,
+  onInitialUploadHandled,
   onResult 
 }: { 
   language: string; 
   crop: string; 
   initialText: string;
+  initialImage: string | null;
+  onImageChange?: (image: string | null) => void;
   onChange: (text: string) => void;
   onBack: () => void; 
+  initialUploadSource?: InitialUploadSource | null;
+  onInitialUploadHandled?: () => void;
   onResult: (result: AdvisoryResult) => void;
 }) {
   const [text, setText] = useState(initialText);
@@ -52,13 +86,14 @@ export function ProblemInput({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [speechSupported, setSpeechSupported] = useState(true);
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string | null>(initialImage);
   
-  // Custom spot density stats state
-  const [spotDensity, setSpotDensity] = useState<{ coverage: number; severity: string; confidence: number } | null>(null);
+  const [visualReviewComplete, setVisualReviewComplete] = useState(false);
   const [visualDiagnosis, setVisualDiagnosis] = useState<string | null>(null);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const initialUploadOpenedRef = useRef(false);
 
   // Guided Voice Mode States
   const [isGuidedMode, setIsGuidedMode] = useState(false);
@@ -77,6 +112,21 @@ export function ProblemInput({
   const guidedStepRef = useRef(guidedStep);
 
   useEffect(() => {
+    if (!initialUploadSource || initialUploadOpenedRef.current) {
+      return;
+    }
+
+    initialUploadOpenedRef.current = true;
+    const timer = window.setTimeout(() => {
+      const input = initialUploadSource === 'gallery' ? galleryInputRef.current : cameraInputRef.current;
+      input?.click();
+      onInitialUploadHandled?.();
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [initialUploadSource, onInitialUploadHandled]);
+
+  useEffect(() => {
     isGuidedModeRef.current = isGuidedMode;
   }, [isGuidedMode]);
 
@@ -87,6 +137,10 @@ export function ProblemInput({
   useEffect(() => {
     onChange(text);
   }, [text, onChange]);
+
+  useEffect(() => {
+    onImageChange?.(image);
+  }, [image, onImageChange]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -240,7 +294,7 @@ export function ProblemInput({
   const analyzeImage = async (base64Img: string) => {
     setIsAnalyzingImage(true);
     setVisualDiagnosis(null);
-    setSpotDensity(null);
+    setVisualReviewComplete(false);
     try {
       const res = await fetch('/api/gemini/analyze-image', {
         method: 'POST',
@@ -251,15 +305,7 @@ export function ProblemInput({
         const data = await res.json();
         if (data.diagnosis) {
           setVisualDiagnosis(data.diagnosis);
-          
-          // Generate simulated spot density statistics based on result
-          const coverPercentage = Math.round((8 + Math.random() * 15) * 10) / 10;
-          const calculatedSeverity = coverPercentage > 15 ? 'Serious' : coverPercentage > 10 ? 'Medium' : 'Low';
-          setSpotDensity({
-            coverage: coverPercentage,
-            severity: calculatedSeverity,
-            confidence: Math.round(88 + Math.random() * 8)
-          });
+          setVisualReviewComplete(true);
         }
       }
     } catch (err) {
@@ -269,11 +315,19 @@ export function ProblemInput({
     }
   };
 
+  useEffect(() => {
+    if (initialImage) {
+      analyzeImage(initialImage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const removeImage = () => {
     setImage(null);
     setVisualDiagnosis(null);
-    setSpotDensity(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setVisualReviewComplete(false);
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
   };
 
   const handleSubmit = async () => {
@@ -318,7 +372,8 @@ export function ProblemInput({
         date: new Date().toISOString(),
         crop,
         language,
-        problem: text
+        problem: text,
+        image: image || undefined
       };
       
       onResult(finalResult);
@@ -368,9 +423,34 @@ export function ProblemInput({
         <span className="font-medium">{t.back || 'Back'}</span>
       </button>
 
-      <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-8 text-center">
+      <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-4 text-center">
         {t.cropProblem || 'Tell us the crop problem'}
       </h2>
+
+      {/* Selected Crop Badge */}
+      <div className="flex justify-center mb-8">
+        <div className="flex items-center gap-3 bg-[var(--brand-light)]/50 border border-[var(--brand-primary)]/15 px-5 py-3 rounded-full shadow-sm backdrop-blur-sm hover:border-[var(--brand-primary)]/35 transition-colors">
+          <span className="text-2xl select-none" role="img" aria-label={crop}>
+            {getCropEmoji(crop)}
+          </span>
+          <div className="flex flex-col text-left">
+            <span className="text-[10px] text-[var(--brand-primary)] font-extrabold uppercase tracking-wider">
+              {language === 'kn' ? 'ಆಯ್ಕೆ ಮಾಡಿದ ಬೆಳೆ' : language === 'hi' ? 'चयनित फसल' : 'Selected Crop'}
+            </span>
+            <span className="text-base font-bold text-[var(--text-primary)]">
+              {getLocalizedCropName(crop, lang)}
+            </span>
+          </div>
+          <div className="h-6 w-px bg-[var(--brand-primary)]/20 mx-1" />
+          <button
+            onClick={onBack}
+            className="text-xs font-extrabold text-rose-600 hover:text-rose-800 transition-all px-3 py-1.5 bg-rose-50 hover:bg-rose-100 rounded-full border border-rose-200/50 flex items-center gap-1 active:scale-95 shadow-sm"
+          >
+            <ShieldAlert className="w-3.5 h-3.5" />
+            {language === 'kn' ? 'ತಪ್ಪು ಬೆಳೆ?' : language === 'hi' ? 'गलत फसल?' : 'Wrong Crop?'}
+          </button>
+        </div>
+      </div>
 
 
 
@@ -465,7 +545,14 @@ export function ProblemInput({
               accept="image/*" 
               capture="environment" 
               className="hidden" 
-              ref={fileInputRef} 
+              ref={cameraInputRef}
+              onChange={handleFileChange}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              ref={galleryInputRef}
               onChange={handleFileChange} 
             />
             
@@ -499,16 +586,26 @@ export function ProblemInput({
                     </button>
                   </div>
                   
-                  <div className="absolute inset-x-0 bottom-0 p-4 flex justify-center bg-gradient-to-t from-black/60 to-transparent">
+                  <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col sm:flex-row justify-center gap-2 bg-gradient-to-t from-black/60 to-transparent">
                     <button 
                       onClick={() => {
                         removeImage();
-                        setTimeout(() => fileInputRef.current?.click(), 100);
+                        setTimeout(() => cameraInputRef.current?.click(), 100);
                       }}
-                      className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full transition-colors font-medium shadow-sm active:scale-95"
+                      className="flex items-center justify-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full transition-colors font-medium shadow-sm active:scale-95"
                     >
                       <Camera className="w-5 h-5" />
                       {isKn ? 'ಮತ್ತೆ ಫೋಟೋ ತೆಗೆಯಿರಿ' : isHi ? 'फिर से फोटो लें' : 'Retake Photo'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        removeImage();
+                        setTimeout(() => galleryInputRef.current?.click(), 100);
+                      }}
+                      className="flex items-center justify-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full transition-colors font-medium shadow-sm active:scale-95"
+                    >
+                      <ImageIcon className="w-5 h-5" />
+                      {isKn ? 'ಗ್ಯಾಲರಿಯಿಂದ ಆರಿಸಿ' : isHi ? 'गैलरी से चुनें' : 'Choose Gallery'}
                     </button>
                   </div>
                 </div>
@@ -539,48 +636,21 @@ export function ProblemInput({
                         </div>
                       </div>
 
-                      {/* Dynamic leaf spot density stats calculator card */}
-                      {spotDensity && !isAnalyzingImage && (
-                        <motion.div 
+                      {/* Visual review status. This is intentionally not a measured disease score. */}
+                      {visualReviewComplete && !isAnalyzingImage && (
+                        <motion.div
                           initial={{ opacity: 0, scale: 0.98 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="w-full p-4 rounded-[var(--radius-lg)] bg-white border border-[#efebe0] shadow-sm flex flex-col gap-3.5"
+                          className="w-full p-4 rounded-[var(--radius-lg)] bg-white border border-[#efebe0] shadow-sm flex items-start gap-3"
                         >
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] text-[#7C8B80] font-black uppercase tracking-wider flex items-center gap-1">
-                              <Info className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
-                              {t.spotDensity || 'Infected Surface Area'}
+                          <Info className="w-4 h-4 text-[var(--brand-primary)] flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-[10px] text-[#7C8B80] font-black uppercase tracking-wider">
+                              {t.preliminaryVisualReview || 'Preliminary visual review'}
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
-                              spotDensity.severity === 'Serious' 
-                                ? 'bg-red-50 text-red-700 border-red-200' 
-                                : spotDensity.severity === 'Medium'
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            }`}>
-                              {spotDensity.coverage}% ({spotDensity.severity})
-                            </span>
-                          </div>
-
-                          <div className="w-full flex items-center gap-3">
-                            {/* Coverage Gauge Progress Bar */}
-                            <div className="flex-1 h-2.5 bg-gray-150 rounded-full overflow-hidden border border-[#efede6] shadow-inner relative">
-                              <motion.div 
-                                initial={{ width: 0 }} 
-                                animate={{ width: `${spotDensity.coverage * 3}%` }} 
-                                transition={{ duration: 1.2, ease: "easeOut" }} 
-                                className={`h-full rounded-full ${
-                                  spotDensity.severity === 'Serious' 
-                                    ? 'bg-red-500' 
-                                    : spotDensity.severity === 'Medium'
-                                      ? 'bg-amber-500'
-                                      : 'bg-emerald-500'
-                                }`} 
-                              />
-                            </div>
-                            <span className="text-xs font-black text-[var(--text-primary)]">
-                              {spotDensity.confidence}% {isKn ? 'ಖಚಿತತೆ' : isHi ? 'सटीकता' : 'Confidence'}
-                            </span>
+                            <p className="text-xs text-[var(--text-secondary)] font-semibold leading-relaxed mt-1">
+                              {t.visualReviewDesc || 'The photo was reviewed by AI as supporting context. It is not a measured infection percentage or confirmed diagnosis.'}
+                            </p>
                           </div>
                         </motion.div>
                       )}
@@ -589,15 +659,26 @@ export function ProblemInput({
                 </AnimatePresence>
               </div>
             ) : (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-center gap-3 w-full py-6 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-soft)] hover:border-[var(--brand-primary)]/50 transition-colors font-medium cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-full bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] flex items-center justify-center animate-pulse">
-                  <Camera className="w-6 h-6" />
-                </div>
-                {isKn ? 'ನಿಮ್ಮ ಬೆಳೆಯ ಫೋಟೋ ಸೇರಿಸಿ' : isHi ? 'अपनी फसल का फोटो जोड़ें' : 'Add a photo of your crop'}
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex items-center justify-center gap-3 w-full py-5 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-soft)] hover:border-[var(--brand-primary)]/50 transition-colors font-medium cursor-pointer"
+                >
+                  <div className="w-11 h-11 rounded-full bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] flex items-center justify-center animate-pulse">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                  {isKn ? 'ಕ್ಯಾಮೆರಾದಿಂದ ತೆಗೆಯಿರಿ' : isHi ? 'कैमरा से लें' : 'Take Photo'}
+                </button>
+                <button
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="flex items-center justify-center gap-3 w-full py-5 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-soft)] hover:border-[var(--brand-primary)]/50 transition-colors font-medium cursor-pointer"
+                >
+                  <div className="w-11 h-11 rounded-full bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] flex items-center justify-center">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  {isKn ? 'ಗ್ಯಾಲರಿಯಿಂದ ಆರಿಸಿ' : isHi ? 'गैलरी से चुनें' : 'Upload from Gallery'}
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -75,3 +75,11 @@ body {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
+/* Scroll Lock Utility */
+.no-scroll {
+  overflow: hidden !important;
+  height: 100vh !important;
+  position: fixed !important;
+  width: 100% !important;
+}

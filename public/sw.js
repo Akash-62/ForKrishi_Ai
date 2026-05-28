@@ -1,9 +1,30 @@
-const CACHE_NAME = 'kisanmind-cache-v1';
+const CACHE_NAME = 'forkisan-static-v2';
 const URLS_TO_CACHE = [
-  '/',
   '/manifest.json',
   '/icon.svg',
 ];
+
+function shouldHandleRequest(request) {
+  if (request.method !== 'GET') {
+    return false;
+  }
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) {
+    return false;
+  }
+
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/')) {
+    return false;
+  }
+
+  if (request.mode === 'navigate') {
+    return false;
+  }
+
+  return URLS_TO_CACHE.includes(url.pathname)
+    || ['image', 'style', 'font', 'manifest'].includes(request.destination);
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -14,12 +35,10 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Simple network-first, fallback to cache proxy for all GET requests except API
-  if (event.request.method === 'GET' && !event.request.url.includes('/api/')) {
+  if (shouldHandleRequest(event.request)) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // If we got a valid response, clone it and cache it
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }

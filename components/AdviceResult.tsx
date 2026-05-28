@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Volume2, VolumeX, Copy, Bookmark, Printer, ShieldAlert, Sparkles, Download, Share2, ShieldCheck } from 'lucide-react';
 import { AdvisoryResult } from '@/lib/types';
-import { UI_STRINGS, CROP_TRANSLATIONS, Language } from '@/lib/translations';
+import { UI_STRINGS, CROP_TRANSLATIONS, Language, getLocalizedCropName } from '@/lib/translations';
 
 function getFormattedDate(dateString?: string) {
   return new Date(dateString || Date.now()).toLocaleDateString(undefined, {
@@ -122,12 +122,30 @@ export function AdviceResult({
     Serious: 'bg-[var(--status-serious)]/10 text-[var(--status-serious)] border-[var(--status-serious)]/20',
   };
 
-  const CROP_EMOJIS: Record<string, string> = {
-    Tomato: '🍅',
-    Paddy: '🌾',
-    Ragi: '🌿',
-    Chilli: '🌶',
-    Maize: '🌽'
+
+
+  const getCropEmoji = (cropName: string) => {
+    if (!cropName) return '🌱';
+    const name = cropName.toLowerCase();
+    if (name.includes('tomato')) return '🍅';
+    if (name.includes('paddy') || name.includes('rice') || name.includes('धान') || name.includes('ಭತ್ತ')) return '🌾';
+    if (name.includes('ragi') || name.includes('ರಾಗಿ') || name.includes('ರಾಕಿ') || name.includes('ರಾ ಗಿ') || name.includes('ರಾ ಜಿ') || name.includes('ರಾ ಗಿ') || name.includes('ರಾ ಜಿ') || name.includes('ರಾಕಿ') || name.includes('ರಾಗಿ') || name.includes('ರಾಗಿ') || name.includes('रागी')) return '🌿';
+    if (name.includes('chilli') || name.includes('pepper') || name.includes('ಮೆಣಸಿನಕಾಯಿ') || name.includes('मिर्च')) return '🌶';
+    if (name.includes('maize') || name.includes('corn') || name.includes('ಮೆಕ್ಕೆಜೋಳ') || name.includes('मक्का')) return '🌽';
+    if (name.includes('lemon') || name.includes('citrus') || name.includes('lime') || name.includes('ನಿಂಬೆ') || name.includes('नींबू')) return '🍋';
+    if (name.includes('mango') || name.includes('ಮಾವು') || name.includes('आम')) return '🥭';
+    if (name.includes('cotton') || name.includes('ಹತ್ತಿ') || name.includes('कपास')) return '☁️';
+    if (name.includes('groundnut') || name.includes('peanut') || name.includes('ನೆಲಗಡಲೆ') || name.includes('ಶೇಂಗಾ') || name.includes('मूंगफली')) return '🥜';
+    if (name.includes('banana') || name.includes('ಬಾಳೆ') || name.includes('केला')) return '🍌';
+    if (name.includes('onion') || name.includes('ಈರುಳ್ಳಿ') || name.includes('प्याज')) return '🧅';
+    if (name.includes('potato') || name.includes('ಆಲೂಗಡ್ಡೆ') || name.includes('आलू')) return '🥔';
+    if (name.includes('garlic') || name.includes('ಬೆಳ್ಳುಳ್ಳಿ') || name.includes('लहसुन')) return '🧄';
+    if (name.includes('ginger') || name.includes('ಶುಂಠಿ') || name.includes('ಅದರಕ್') || name.includes('अदरक')) return '🫚';
+    if (name.includes('brinjal') || name.includes('eggplant') || name.includes('ಬದನೆಕಾಯಿ') || name.includes('बैंगन')) return '🍆';
+    if (name.includes('wheat') || name.includes('ಗೋಧಿ') || name.includes('गेहूं')) return '🌾';
+    if (name.includes('coconut') || name.includes('ತೆಂಗಿನಕಾಯಿ') || name.includes('ನಾರಿಯಲ್') || name.includes('नारियल')) return '🥥';
+    if (name.includes('arecanut') || name.includes('ಅಡಿಕೆ') || name.includes('सुपारी')) return '🌴';
+    return '🌱';
   };
 
   const severityLabels: Record<Language, Record<string, string>> = {
@@ -158,21 +176,41 @@ export function AdviceResult({
   const handleDownloadCard = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 800;
-    canvas.height = 1000;
+
+    // Dynamically calculate canvas height based on content to prevent overlaps
+    const remediesToDraw = organicDoNow.length > 0 ? organicDoNow.slice(0, 3) : result.doNow.slice(0, 3);
+    const charPerLine = lang === 'en' ? 55 : 45; // Local scripts are wider
+    const summaryLines = Math.ceil(result.problemSummary.length / charPerLine) || 1;
+    
+    let remediesLines = 0;
+    remediesToDraw.forEach(item => {
+      remediesLines += Math.ceil(item.length / charPerLine) || 1;
+    });
+    
+    const headerHeight = 220;
+    const summaryHeight = summaryLines * 45;
+    const imageHeight = result.image ? 320 : 0;
+    const remediesTitleHeight = 55;
+    const remediesHeight = (remediesLines * 28) + (remediesToDraw.length * 45);
+    const footerHeight = 160;
+    
+    const totalHeight = headerHeight + summaryHeight + imageHeight + remediesTitleHeight + remediesHeight + footerHeight;
+    canvas.height = Math.max(1000, Math.round(totalHeight));
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     // Background Gradient (Tactile Slate Green)
-    const grad = ctx.createLinearGradient(0, 0, 0, 1000);
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
     grad.addColorStop(0, '#123C2C');
     grad.addColorStop(1, '#081D15');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 800, 1000);
+    ctx.fillRect(0, 0, 800, canvas.height);
 
     // Inner Border
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.lineWidth = 15;
-    ctx.strokeRect(30, 30, 740, 940);
+    ctx.strokeRect(30, 30, 740, canvas.height - 60);
 
     // Title Header
     ctx.fillStyle = '#A7F3D0';
@@ -194,7 +232,7 @@ export function AdviceResult({
     // Crop Emoji & Text
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 36px sans-serif';
-    ctx.fillText(`${CROP_EMOJIS[result.crop] || '🌱'} ${CROP_TRANSLATIONS[lang]?.[result.crop] || result.crop}`, 80, 182);
+    ctx.fillText(`${getCropEmoji(result.crop)} ${getLocalizedCropName(result.crop, lang)}`, 80, 182);
 
     // Severity Badge
     const badgeColor = result.severity === 'Serious' ? '#EF4444' : result.severity === 'Medium' ? '#F59E0B' : '#10B981';
@@ -300,11 +338,12 @@ export function AdviceResult({
       });
 
       // Bottom Divider
+      const dividerY = adviceY + 15;
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(60, 900);
-      ctx.lineTo(740, 900);
+      ctx.moveTo(60, dividerY);
+      ctx.lineTo(740, dividerY);
       ctx.stroke();
 
       // Footer
@@ -314,7 +353,7 @@ export function AdviceResult({
       const discText = t.disclaimer || 'This is AI guidance. Consult KVK before chemical treatment.';
       const discWords = discText.split(' ');
       let discLine = '';
-      let discY = 925;
+      let discY = dividerY + 35;
       for (let n = 0; n < discWords.length; n++) {
         let testLine = discLine + discWords[n] + ' ';
         let metrics = ctx.measureText(testLine);
@@ -400,7 +439,7 @@ export function AdviceResult({
           <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
             <div>
               <p className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1">
-                {t.crop || 'Crop'}: {CROP_TRANSLATIONS[lang]?.[result.crop] || result.crop}
+                {t.crop || 'Crop'}: {getLocalizedCropName(result.crop, lang)}
               </p>
               <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] leading-snug">{result.problemSummary}</h2>
             </div>
@@ -415,81 +454,91 @@ export function AdviceResult({
           {/* Morphing Leaf SVG Graphic */}
           <div className="relative w-36 h-36 flex items-center justify-center bg-[#FAF9F5] border border-[#efede6] rounded-2xl flex-shrink-0 shadow-inner">
             <svg viewBox="0 0 100 100" className="w-28 h-28 transform -rotate-12">
-              {/* Healthy Leaf Base Shape */}
+              <defs>
+                {/* Leaf Base Gradient */}
+                <linearGradient id="leafGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={day < 4 ? '#15803d' : day < 7 ? '#854d0e' : '#78350f'} className="transition-colors duration-500" />
+                  <stop offset="50%" stopColor={day < 4 ? '#22c55e' : day < 7 ? '#eab308' : '#854d0e'} className="transition-colors duration-500" />
+                  <stop offset="100%" stopColor={day < 4 ? '#86efac' : day < 7 ? '#fef08a' : '#ca8a04'} className="transition-colors duration-500" />
+                </linearGradient>
+                
+                {/* Fungal Spot Radials */}
+                <radialGradient id="spotGrad">
+                  <stop offset="0%" stopColor="#1e0b00" />
+                  <stop offset="45%" stopColor="#451a03" stopOpacity="0.9" />
+                  <stop offset="80%" stopColor="#ca8a04" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+
+              {/* Healthy/Infected Leaf Base Shape */}
               <path 
                 d="M15,85 C25,60 40,30 85,15 C70,45 60,75 15,85 Z" 
-                fill={day < 4 ? '#86EFAC' : day < 8 ? '#FDE047' : '#CA8A04'} 
-                stroke="#1E6B4B" 
+                fill="url(#leafGrad)"
+                stroke={day < 7 ? '#1e6b4b' : '#5c3818'} 
                 strokeWidth="2.5" 
                 strokeLinecap="round" 
                 strokeLinejoin="round" 
                 className="transition-colors duration-500"
               />
               
+              {/* Veins */}
               {/* Midrib */}
               <path 
-                d="M15,85 L85,15" 
-                stroke="#1E6B4B" 
-                strokeWidth="1.5" 
+                d="M15,85 Q45,55 85,15" 
+                stroke={day < 7 ? '#14532d' : '#451a03'} 
+                strokeWidth="2" 
+                fill="none"
                 strokeLinecap="round" 
+                className="transition-colors duration-500"
               />
+              
+              {/* Lateral Veins */}
+              <path d="M32,70 Q45,72 55,75" stroke={day < 7 ? '#166534' : '#78350f'} strokeWidth="1" fill="none" opacity="0.6" className="transition-colors duration-500" />
+              <path d="M48,53 Q62,56 72,59" stroke={day < 7 ? '#166534' : '#78350f'} strokeWidth="1" fill="none" opacity="0.6" className="transition-colors duration-500" />
+              <path d="M63,35 Q75,38 82,41" stroke={day < 7 ? '#166534' : '#78350f'} strokeWidth="1" fill="none" opacity="0.6" className="transition-colors duration-500" />
+
+              <path d="M32,70 Q22,60 20,48" stroke={day < 7 ? '#166534' : '#78350f'} strokeWidth="1" fill="none" opacity="0.6" className="transition-colors duration-500" />
+              <path d="M48,53 Q35,42 30,30" stroke={day < 7 ? '#166534' : '#78350f'} strokeWidth="1" fill="none" opacity="0.6" className="transition-colors duration-500" />
+              <path d="M63,35 Q50,24 44,14" stroke={day < 7 ? '#166534' : '#78350f'} strokeWidth="1" fill="none" opacity="0.6" className="transition-colors duration-500" />
               
               {/* Spot Lesions - Number & size scales with day */}
               {/* Spot 1 */}
               {day >= 1 && (
-                <circle 
-                  cx="45" cy="50" 
-                  r={Math.min(2 + day * 0.7, 8)} 
-                  fill={day < 5 ? '#78350F' : '#451A03'} 
-                  stroke={day > 4 ? '#EAB308' : 'none'} 
-                  strokeWidth="1.5"
-                  opacity={0.3 + day * 0.07} 
-                  className="transition-all duration-300"
-                />
+                <g className="transition-all duration-300">
+                  <circle cx="45" cy="50" r={Math.min(2 + day * 0.9, 10)} fill="url(#spotGrad)" />
+                  <circle cx="45" cy="50" r={Math.min(0.8 + day * 0.4, 4.5)} fill="#271306" opacity="0.85" />
+                </g>
               )}
               {/* Spot 2 */}
               {day >= 3 && (
-                <circle 
-                  cx="60" cy="35" 
-                  r={Math.min(1.5 + (day - 2) * 0.6, 6)} 
-                  fill={day < 6 ? '#78350F' : '#451A03'} 
-                  stroke={day > 5 ? '#EAB308' : 'none'}
-                  strokeWidth="1"
-                  opacity={0.2 + day * 0.07} 
-                  className="transition-all duration-300"
-                />
+                <g className="transition-all duration-300">
+                  <circle cx="60" cy="35" r={Math.min(1.5 + (day - 2) * 0.8, 8)} fill="url(#spotGrad)" />
+                  <circle cx="60" cy="35" r={Math.min(0.6 + (day - 2) * 0.35, 3.5)} fill="#271306" opacity="0.8" />
+                </g>
               )}
               {/* Spot 3 */}
               {day >= 5 && (
-                <circle 
-                  cx="35" cy="65" 
-                  r={Math.min(1 + (day - 4) * 0.6, 5)} 
-                  fill="#451A03" 
-                  stroke="#EAB308"
-                  strokeWidth="1"
-                  opacity={0.4 + day * 0.05} 
-                  className="transition-all duration-300"
-                />
+                <g className="transition-all duration-300">
+                  <circle cx="35" cy="65" r={Math.min(1.2 + (day - 4) * 0.8, 7)} fill="url(#spotGrad)" />
+                  <circle cx="35" cy="65" r={Math.min(0.5 + (day - 4) * 0.35, 3)} fill="#271306" opacity="0.8" />
+                </g>
               )}
               {/* Spot 4 */}
               {day >= 7 && (
-                <circle 
-                  cx="50" cy="65" 
-                  r={Math.min(1 + (day - 6) * 0.6, 4)} 
-                  fill="#451A03" 
-                  opacity={0.5 + day * 0.04} 
-                  className="transition-all duration-300"
-                />
+                <g className="transition-all duration-300">
+                  <circle cx="50" cy="65" r={Math.min(1 + (day - 6) * 0.7, 6)} fill="url(#spotGrad)" />
+                  <circle cx="50" cy="65" r={Math.min(0.4 + (day - 6) * 0.3, 2.5)} fill="#271306" opacity="0.75" />
+                </g>
               )}
               {/* Spot 5 */}
               {day >= 9 && (
-                <circle 
-                  cx="30" cy="50" 
-                  r="3.5" 
-                  fill="#27272A" 
-                  opacity="0.9" 
-                  className="transition-all duration-300"
-                />
+                <g className="transition-all duration-300">
+                  <circle cx="30" cy="50" r="5" fill="url(#spotGrad)" />
+                  <circle cx="30" cy="50" r="2.2" fill="#180a02" opacity="0.9" />
+                  <circle cx="55" cy="48" r="4" fill="url(#spotGrad)" />
+                  <circle cx="55" cy="48" r="1.8" fill="#180a02" opacity="0.9" />
+                </g>
               )}
             </svg>
             <span className="absolute bottom-2 bg-white/80 border border-[#efede6] text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm select-none">

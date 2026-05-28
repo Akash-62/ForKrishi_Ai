@@ -1,15 +1,39 @@
-import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  createGeminiClient,
+  GEMINI_MODEL,
+  GeminiPart,
+  isRateLimited,
+  limitedString,
+  normalizeAdvisoryPayload,
+  parseDataUrlImage,
+  parseJsonObject,
+} from "@/lib/gemini-utils";
 
 export async function POST(req: NextRequest) {
   try {
-    const { crop, language, problem, image } = await req.json();
+    if (isRateLimited(req, "gemini-generate", 12)) {
+      return NextResponse.json({ error: "Too many requests. Please wait and try again." }, { status: 429 });
+    }
 
-    if (!problem && !image) {
+    const body = await req.json();
+    const crop = limitedString(body?.crop, 80, "Unknown crop");
+    const language = limitedString(body?.language, 8, "en");
+    const problem = limitedString(body?.problem, 2_000);
+    const parsedImage = body?.image ? parseDataUrlImage(body.image) : null;
+
+    if (body?.image && !parsedImage) {
+      return NextResponse.json({ error: "Invalid or unsupported image data" }, { status: 400 });
+    }
+
+    if (!problem && !parsedImage) {
       return NextResponse.json({ error: "Problem description or photo is required" }, { status: 400 });
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const ai = createGeminiClient();
+    if (!ai) {
+      return NextResponse.json({ error: "Gemini API key is not configured" }, { status: 500 });
+    }
     
     const problemText = problem ? problem : "(User uploaded a photo of their crop problem without text description)";
 
@@ -20,6 +44,7 @@ Crop: ${crop}
 Problem: ${problemText}
 
 Analyze the image (if provided) and the problem description to provide agricultural advice.
+Do not claim this is a confirmed diagnosis. For chemical treatments, keep advice cautious and tell the farmer to verify with a local agriculture officer or KVK before use.
 Respond with a JSON object ONLY. Do not use markdown wrapping around the JSON.
 The JSON must have this exact structure:
 {
@@ -33,22 +58,19 @@ The JSON must have this exact structure:
 
 Ensure the language used in the values of the JSON matches the requested Language (${language}). Keep the tone extremely simple, respectful, and practical. Do not use technical jargon.`;
 
-    let contents: any[] = [{ text: prompt }];
+    const contents: GeminiPart[] = [{ text: prompt }];
 
-    if (image) {
-      const match = image.match(/^data:(image\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
-      if (match) {
-        contents.push({
-          inlineData: {
-            mimeType: match[1],
-            data: match[2]
-          }
-        });
-      }
+    if (parsedImage) {
+      contents.push({
+        inlineData: {
+          mimeType: parsedImage.mimeType,
+          data: parsedImage.data
+        }
+      });
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: GEMINI_MODEL,
       contents: contents,
       config: {
         responseMimeType: "application/json",
@@ -56,9 +78,14 @@ Ensure the language used in the values of the JSON matches the requested Languag
     });
 
     const text = response.text || "{}";
-    const data = JSON.parse(text);
+    const parsed = parseJsonObject(text);
+    const data = normalizeAdvisoryPayload(parsed);
+    if (!data) {
+      return NextResponse.json({ error: "Gemini returned an invalid advisory format" }, { status: 502 });
+    }
+
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Gemini Error:", error);
     return NextResponse.json({ error: "Failed to generate advice. Please try again." }, { status: 500 });
   }
